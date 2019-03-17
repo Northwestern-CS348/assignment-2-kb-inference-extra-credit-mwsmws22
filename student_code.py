@@ -141,8 +141,35 @@ class KnowledgeBase(object):
             string explaining hierarchical support from other Facts and rules
         """
         ####################################################
-        # Student code goes here
 
+        if isinstance(fact_or_rule, Fact):
+            result = self._get_fact(fact_or_rule)
+        elif isinstance(fact_or_rule, Rule):
+            result = self._get_rule(fact_or_rule)
+        else:
+            return False
+        if result == None:
+            return fact_or_rule.name + " is not in the KB"
+        return self.loop(result, "", 0)
+
+    def loop(self, result, currentString, padding):
+        if isinstance(result, Fact):
+            currentString += "  " * padding + result.name + ": " + str(result.statement)
+        if isinstance(result, Rule):
+            currentString += "  " * padding + result.name + ": (" + str(result.lhs[0])
+            for lhs in result.lhs[1:]:
+                currentString += ", " + str(lhs)
+            currentString += ") -> " + str(result.rhs)
+        if result.asserted:
+            currentString += " ASSERTED"
+        currentString += "\n"
+        padding += 1
+        for support in result.supported_by:
+            currentString += "  " * padding + "SUPPORTED BY \n"
+            tempPadding = padding + 1
+            for statement in support:
+                currentString = self.loop(statement, currentString, tempPadding)
+        return currentString
 
 class InferenceEngine(object):
     def fc_infer(self, fact, rule, kb):
